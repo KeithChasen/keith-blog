@@ -1,6 +1,6 @@
+const config = require('./config')
 const functions = require('firebase-functions');
 const admin = require('firebase-admin')
-const config = require('functions/config')
 const app = require('express')()
 const firebase = require('firebase')
 
