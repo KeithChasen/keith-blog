@@ -3,6 +3,7 @@ const functions = require('firebase-functions');
 const admin = require('firebase-admin')
 const app = require('express')()
 const firebase = require('firebase')
+const validate = require('validate.js')
 
 admin.initializeApp()
 firebase.initializeApp(config)
@@ -49,6 +50,30 @@ app.post('/scream',(req, res) => {
         })
 })
 
+const isEmpty = string => string.trim() === ''
+const isEmail = email => validate({email: email}, {email: {email: true}})
+const validatesSignUp = newUser => {
+    let errors = {}
+
+    if (isEmpty(newUser.email))
+        errors.email = 'Must not be empty'
+
+    if (isEmail(newUser.email))
+        errors.email = 'Email is invalid'
+
+    if (isEmpty(newUser.password))
+        errors.password = 'Must not be empty'
+
+    if (newUser.password !== newUser.confirmPassword)
+        errors.confirmPassword = 'Passwords should match'
+
+    if (isEmpty(newUser.handle))
+        errors.handle = 'Must not be empty'
+
+    return errors
+}
+
+
 //signup route
 app.post('/signup', (req, res) => {
     const newUser = {
@@ -57,6 +82,10 @@ app.post('/signup', (req, res) => {
         confirmPassword: req.body.confirmPassword,
         handle: req.body.handle,
     }
+
+    let errors = validatesSignUp(newUser)
+
+    if (Object.keys(errors).length > 0) return res.status(400).json(errors)
 
     let token, userId
 
@@ -90,8 +119,12 @@ app.post('/signup', (req, res) => {
                 .catch(err => {
                     console.error(err)
 
-                    if(err.code === 'auth/email-already-in-use') {
+                    if (err.code === 'auth/email-already-in-use') {
                         return res.status(400).json({email: 'Email is already in use'})
+                    }
+
+                    if (err.code === 'auth/weak-password') {
+                        return res.status(400).json({email: 'Password should contain at least 6 characters'})
                     }
 
                     return res.status(500).json({error: err.code})
