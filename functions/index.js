@@ -6,10 +6,10 @@ const firebase = require('firebase')
 
 admin.initializeApp()
 firebase.initializeApp(config)
+const db = admin.firestore()
 
 app.get('/screams', (req, res) => {
-    admin
-        .firestore()
+    db
         .collection('screams')
         .orderBy('createdAt', 'desc')
         .get()
@@ -37,7 +37,7 @@ app.post('/scream',(req, res) => {
         createdAt: new Date().toISOString()
     }
 
-    admin.firestore()
+    db
         .collection('screams')
         .add(newScream)
         .then(doc => {
@@ -58,13 +58,32 @@ app.post('/signup', (req, res) => {
         handle: req.body.handle,
     }
 
-    firebase.auth().createUserWithEmailAndPassword(newUser.email, newUser.password)
-        .then(data => {
-            return res.status(201).json({message: `user ${data.user.uid} signed up successfully`})
-        })
-        .catch(err => {
-            console.error(err)
-            return res.status(500).json({error: err.code})
+    db
+        .doc(`/users/${newUser.handle}`)
+        .get()
+        .then(doc => {
+            if (doc.exists)
+                return res.status(400).json({ handle: 'this handle is already taken' })
+
+            return firebase
+                .auth()
+                .createUserWithEmailAndPassword(newUser.email, newUser.password)
+                .then(data => {
+                    return data.user.getIdToken()
+                })
+                .then(token => {
+                    return res.status(201).json({ token })
+                })
+                .catch(err => {
+                    console.error(err)
+
+                    if(err.code === 'auth/email-already-in-use') {
+                        return res.status(400).json({email: 'Email is already in use'})
+                    }
+
+                    return res.status(500).json({error: err.code})
+                })
+
         })
 })
 
