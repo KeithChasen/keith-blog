@@ -58,6 +58,8 @@ app.post('/signup', (req, res) => {
         handle: req.body.handle,
     }
 
+    let token, userId
+
     db
         .doc(`/users/${newUser.handle}`)
         .get()
@@ -69,9 +71,20 @@ app.post('/signup', (req, res) => {
                 .auth()
                 .createUserWithEmailAndPassword(newUser.email, newUser.password)
                 .then(data => {
+                    userId = data.user.uid
                     return data.user.getIdToken()
                 })
-                .then(token => {
+                .then(tkn => {
+                    token = tkn
+                    const userCredentials = {
+                        handle: newUser.handle,
+                        email: newUser.email,
+                        createdAt: new Date().toISOString(),
+                        userId: userId
+                    }
+                    db.doc(`/users/${newUser.handle}`).set(userCredentials)
+                })
+                .then(() => {
                     return res.status(201).json({ token })
                 })
                 .catch(err => {
