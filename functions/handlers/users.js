@@ -1,7 +1,7 @@
 const { db, admin } = require('../util/admin')
 const firebase = require('firebase')
 const config = require('../config')
-const { validatesSignUp, validatesSignIn } = require('../util/validators')
+const { validatesSignUp, validatesSignIn, reduceUserDetails } = require('../util/validators')
 
 firebase.initializeApp(config)
 
@@ -102,6 +102,21 @@ exports.login = (req, res) => {
             return res.status(500).json({error: err.code})
         })
 
+}
+
+exports.addUserDetails = (req, res) => {
+    let userDetails = reduceUserDetails(req.body)
+
+    db
+        .doc(`/users/${req.user.handle}`)
+        .update(userDetails)
+        .then(() => {
+            return res.json({ message: 'Details added successfully'})
+        })
+        .catch(err => {
+            console.log(err)
+            return res.status(500).json({error: err.code})
+        })
 }
 
 exports.uploadImage = (req, res) => {
