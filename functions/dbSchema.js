@@ -22,3 +22,27 @@ let db = {
     ]
 }
 
+const userDetails = {
+    credentials: {
+        userId: 'asd67a6a7b677as6d76as7d',
+        email: 'user@mail.com',
+        handle: 'user',
+        createdAt: '2019-04-25T12:29:43.784Z',
+        imageUrl: 'image/asdagdfger/asdasdasdasdas',
+        bio: 'My name is username',
+        website: 'https://site.com',
+        location: 'Kharkiv, UA'
+    },
+    likes: [
+        {
+            userHandle: 'user',
+            screamId: 'hahuadhsia23WEasomd'
+        },
+        {
+            userHandle: 'user',
+            screamId: 'Kijasd89jikjoasd'
+        }
+    ]
+
+}
+
